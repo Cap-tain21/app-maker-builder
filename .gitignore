@@ -1,0 +1,11 @@
+# Gradle/Android
+.gradle/
+**/build/
+*/gradle/wrapper/gradle-wrapper.jar
+/local.properties
+.DS_Store
+/output/
+deploy/
+*.apk
+*.aab
+app_content.zip
