@@ -1,71 +1,43 @@
-name: Build & Deploy APK
+name: Build APK & Deploy
 
 on:
   push:
     branches:
-      - main  # trigger on push to main
-  workflow_dispatch:  # manual trigger
+      - main
 
 jobs:
-  build:
-    name: Build APK
-    runs-on: ubuntu-latest
-
-    env:
-      JAVA_HOME: /usr/lib/jvm/java-17-openjdk
-      ANDROID_HOME: ${{ github.workspace }}/Android/Sdk
-      PATH: ${{ github.workspace }}/Android/Sdk/cmdline-tools/latest/bin:${{ github.workspace }}/Android/Sdk/platform-tools:$PATH
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Set up Java 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Cache Gradle
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper/
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: gradle-${{ runner.os }}-
-
-      - name: Install Android SDK
-        run: |
-          mkdir -p $ANDROID_HOME/cmdline-tools
-          curl -o sdk-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-          unzip sdk-tools.zip -d $ANDROID_HOME/cmdline-tools
-          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
-
-      - name: Build Debug APK
-        run: ./gradlew :app:assembleDebug
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: app-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
-
-  deploy:
-    name: Deploy APK to gh-pages
-    needs: build
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Deploy APK
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GH_PAT }}
-          publish_dir: ./app/build/outputs/apk/debug
-          publish_branch: gh-pages
-          force_orphan: true
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: 17
+
+    - name: Make Gradle executable
+      run: chmod +x ./gradlew
+
+    - name: Build Debug APK
+      run: ./gradlew :app:assembleDebug
+
+    - name: Prepare deploy directory
+      run: |
+        mkdir -p deploy
+        cp app/build/outputs/apk/debug/app-debug.apk deploy/MyApp.apk
+        cd deploy
+        zip -r MyApp.zip MyApp.apk
+        cd ..
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GH_PAT }}
+        publish_dir: ./deploy
+        user_name: Cap-tain21
+        user_email: onlycaptains07@example.com
+        publish_branch: gh-pages
