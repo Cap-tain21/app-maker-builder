@@ -1,0 +1,8 @@
+APP_NAME="My Cool App"
+PACKAGE_NAME="com.cap21.mycoolapp"
+VERSION_CODE="1"
+VERSION_NAME="1.0"
+KEYSTORE_PATH="keystore/mykeystore.jks"
+KEYSTORE_PASS="123456"
+KEY_ALIAS="mykey"
+KEY_PASS="123456"
