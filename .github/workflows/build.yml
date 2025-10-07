@@ -1,4 +1,4 @@
-name: Build APK and AAB
+name: Build APK and Deploy Pages
 
 on:
   push:
@@ -11,47 +11,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        distribution: temurin
-        java-version: 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
 
-    - name: Install zip, unzip
-      run: sudo apt-get update && sudo apt-get install -y zip unzip
+      - name: Install zip, unzip
+        run: sudo apt-get update && sudo apt-get install -y zip unzip
 
-    - name: Prepare user app content
-      run: |
-        mkdir -p template/app/src/main/assets/www/
-        cp -r myapp/* template/app/src/main/assets/www/
+      - name: Make build scripts executable
+        run: |
+          chmod +x build_apk.sh
+          chmod +x setup_builder.sh
+          chmod +x template/gradlew
 
-    - name: Build APK
-      working-directory: template
-      run: |
-        chmod +x gradlew
-        ./gradlew assembleRelease || true
+      - name: Build APK
+        run: |
+          bash setup_builder.sh
+          bash build_apk.sh || true
 
-    - name: Sign APK
-      working-directory: template
-      run: |
-        mkdir -p output
-        jarsigner -verbose -keystore ../keystore/mykeystore.jks \
-          -storepass 123456 -keypass 123456 \
-          app/build/outputs/apk/release/app-release-unsigned.apk mykey || true
-        zipalign -v 4 app/build/outputs/apk/release/app-release-unsigned.apk \
-          ../output/MyCoolApp.apk || true
+      - name: Upload APK & ZIP as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-artifacts
+          path: |
+            output/*
+            app_content.zip
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v3
-      with:
-        name: MyCoolApp.apk
-        path: output/MyCoolApp.apk
-
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v6
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./myapp
+      - name: Deploy GitHub Pages
+        uses: peaceiris/actions-gh-pages@v5
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./template/app/src/main/assets/www/myapp
+          user_name: 'Cap-tain21'
+          user_email: 'onlycaptains07@example.com'
