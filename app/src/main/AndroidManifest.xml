@@ -1,1 +1,5 @@
-<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.example.myapp'><application><activity android:name='.MainActivity'></activity></application></manifest>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.myapp">
+    <application>
+        <activity android:name=".MainActivity"></activity>
+    </application>
+</manifest>
