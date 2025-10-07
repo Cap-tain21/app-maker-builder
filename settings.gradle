@@ -1,10 +1,2 @@
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
 rootProject.name = 'app-maker-builder'
-include ':app'
-
+include ':template'

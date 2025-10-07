@@ -8,73 +8,65 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      ANDROID_SDK_ROOT: ${{ runner.temp }}/android-sdk
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      - name: Install Android SDK commandline tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y unzip wget
-          mkdir -p "${ANDROID_SDK_ROOT}/cmdline-tools"
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /tmp/cmdline-tools.zip
-          unzip -q /tmp/cmdline-tools.zip -d "${ANDROID_SDK_ROOT}/cmdline-tools"
-          mv "${ANDROID_SDK_ROOT}/cmdline-tools/cmdline-tools" "${ANDROID_SDK_ROOT}/cmdline-tools/latest" || true
-          export PATH=${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:$PATH
-          yes | sdkmanager --sdk_root=${ANDROID_SDK_ROOT} --licenses
-          sdkmanager --sdk_root=${ANDROID_SDK_ROOT} "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+      - name: Make template gradlew executable
+        run: chmod +x template/gradlew || true
 
-      - name: Ensure gradle wrapper exists (create if missing)
-        run: |
-          if [ -f template/gradlew ]; then chmod +x template/gradlew; else
-            sudo apt-get update && sudo apt-get install -y gradle
-            (cd template && gradle wrapper --gradle-version 7.5)
-          fi
-
-      - name: Build debug APK
+      - name: Build debug APK (template project)
         run: |
           cd template
-          chmod +x ./gradlew || true
-          ./gradlew :app:assembleDebug --no-daemon
+          ./gradlew --no-daemon :app:assembleDebug
+        env:
+          JAVA_HOME: /usr/lib/jvm/adoptopenjdk-17-hotspot || $JAVA_HOME
 
-      - name: Prepare APK artifact
+      - name: Prepare APK zip
         run: |
           mkdir -p deploy
           if [ -f template/app/build/outputs/apk/debug/app-debug.apk ]; then
-            cp template/app/build/outputs/apk/debug/app-debug.apk deploy/
-            (cd deploy && zip -r MyApp.zip *.apk)
+            cp template/app/build/outputs/apk/debug/app-debug.apk deploy/MyApp.apk
+            cd deploy
+            zip -r MyApp.zip MyApp.apk
           else
-            echo "No APK found; build might have failed"
+            echo "APK missing: listing template/app/build/outputs/apk/debug"
+            ls -la template/app/build/outputs/apk || true
+            exit 1
           fi
 
-      - name: Upload APK artifact
+      - name: Upload APK ZIP artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-artifacts
-          path: deploy/*
+          name: MyApp
+          path: deploy/MyApp.zip
 
   deploy-pages:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      - name: Unzip app_content.zip if present (optional)
+      - name: Unzip app_content.zip if present
         run: |
-          if [ -f app_content.zip ]; then mkdir -p template/app/src/main/assets/www/myapp && unzip -o app_content.zip -d template/app/src/main/assets/www/myapp/ || true; fi
+          # if app_content.zip exists at repo root, expand into the folder published to pages
+          mkdir -p template/app/src/main/assets/www/myapp
+          if [ -f app_content.zip ]; then unzip -o app_content.zip -d template/app/src/main/assets/www/myapp; fi
+          # ensure something is present
+          ls -la template/app/src/main/assets/www/myapp || true
 
-      - name: Deploy GitHub Pages (publish ./template/app/src/main/assets/www/myapp)
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GH_PAT }}
           publish_dir: ./template/app/src/main/assets/www/myapp
+          publish_branch: gh-pages
           user_name: 'Cap-tain21'
           user_email: 'onlycaptains07@example.com'
-          publish_branch: gh-pages
