@@ -1,1 +1,1 @@
-package com.example.myapp;\nimport android.app.Activity;\nimport android.os.Bundle;\npublic class MainActivity extends Activity { @Override protected void onCreate(Bundle savedInstanceState) { super.onCreate(savedInstanceState); } }
+package com.example.myapp; import android.app.Activity; import android.os.Bundle; public class MainActivity extends Activity { @Override protected void onCreate(Bundle savedInstanceState) { super.onCreate(savedInstanceState); } }

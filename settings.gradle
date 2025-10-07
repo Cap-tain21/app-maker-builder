@@ -1,1 +1,2 @@
-rootProject.name = 'app-maker-builder'\ninclude ':app'
+rootProject.name = 'app-maker-builder'
+include ':app'
