@@ -1,0 +1,38 @@
+name: Build APK & Upload
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Build APK
+        run: ./gradlew :app:assembleDebug
+
+      - name: Prepare ZIP
+        run: |
+          mkdir -p deploy
+          cp app/build/outputs/apk/debug/app-debug.apk deploy/MyApp.apk
+          cd deploy
+          zip -r MyApp.zip MyApp.apk
+          cd ..
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: MyApp
+          path: deploy/MyApp.zip
