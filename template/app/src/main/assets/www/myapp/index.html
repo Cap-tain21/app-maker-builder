@@ -1,1 +1,49 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>MyApp</title></head><body><h1>MyApp preview</h1><p>Put your combined HTML/CSS/JS here.</p></body></html>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My App</title>
+    <style>
+        * {margin: 0; padding: 0; box-sizing: border-box;}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px;
+        }
+        button {
+            background: #FFD166;
+            color: #1A1B3E;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        button:active {transform: scale(0.95);}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Your App</h1>
+        <p>Your custom content will be loaded here</p>
+        <button onclick="showMessage()">Click Me!</button>
+        <p id="message"></p>
+    </div>
+    <script>
+        function showMessage() {
+            document.getElementById('message').textContent = 'App is working! 🎉';
+        }
+    </script>
+</body>
+</html>
