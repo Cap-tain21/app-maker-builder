@@ -1,22 +1,31 @@
-plugins {
-    id 'com.android.application'
-    id 'org.jetbrains.kotlin.android' version '1.9.10' apply false
-}
+apply plugin: 'com.android.application'
+
 android {
     namespace "com.example.appmaker"
-    compileSdk 33
+    compileSdkVersion 33
+    buildToolsVersion "33.0.0"
+
     defaultConfig {
         applicationId "com.example.appmaker"
-        minSdk 21
-        targetSdk 33
+        minSdkVersion 21
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
     }
+
     buildTypes {
-        release { minifyEnabled false }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
     }
-    compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8 }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
+
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'
