@@ -1,16 +1,16 @@
-name: Build APK + Deploy Pages
+name: Build Android APK & Upload
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -19,53 +19,15 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Make gradlew executable
-        run: |
-          if [ -f ./gradlew ]; then chmod +x ./gradlew; fi
+      - name: Ensure gradlew executable
+        run: chmod +x template/gradlew || true
 
-      - name: Ensure app_content.zip extracted to assets (if present)
-        run: |
-          mkdir -p template/app/src/main/assets/www/myapp
-          if [ -f app_content.zip ]; then unzip -o app_content.zip -d template/app/src/main/assets/www/myapp || true; fi
+      - name: Build debug APK inside template folder
+        working-directory: template
+        run: ./gradlew assembleDebug --stacktrace
 
-      - name: Build debug APK
-        run: |
-          # Prefer wrapper if present; fallback to system gradle
-          if [ -f ./gradlew ]; then
-            ./gradlew :app:assembleDebug --no-daemon
-          else
-            sudo apt-get update && sudo apt-get install -y gradle
-            gradle :app:assembleDebug
-          fi
-        env:
-          JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF8
-
-      - name: Prepare artifact & zip
-        run: |
-          mkdir -p deploy
-          APK=app/build/outputs/apk/debug/app-debug.apk
-          if [ -f "$APK" ]; then
-            cp "$APK" deploy/
-            cd deploy
-            zip -r MyApp.zip app-debug.apk
-            cd ..
-          else
-            echo "APK not built or not found at $APK"
-            ls -R app/build || true
-            exit 1
-          fi
-
-      - name: Upload APK ZIP artifact
+      - name: Upload built APK
         uses: actions/upload-artifact@v4
         with:
-          name: MyApp
-          path: deploy/MyApp.zip
-
-      - name: Deploy web preview to gh-pages (optional)
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GH_PAT }}
-          publish_dir: ./template/app/src/main/assets/www/myapp
-          publish_branch: gh-pages
-          user_name: 'Cap-tain21'
-          user_email: 'onlycaptains07@example.com'
+          name: MyApp-debug
+          path: template/app/build/outputs/apk/debug/app-debug.apk
