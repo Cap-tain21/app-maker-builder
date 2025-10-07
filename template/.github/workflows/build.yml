@@ -1,31 +1,37 @@
-name: Build APK & Deploy
+name: Build APK & Upload Artifact
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
+    # Step 1: Checkout your repo
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    # Step 2: Set up Java (Gradle needs Java)
     - name: Set up JDK
       uses: actions/setup-java@v3
       with:
-        distribution: 'temurin'
+        distribution: temurin
         java-version: 17
 
-    - name: Make Gradle executable
+    # Step 3: Make Gradle executable
+    - name: Make Gradle wrapper executable
       run: chmod +x ./gradlew
 
+    # Step 4: Build Debug APK
     - name: Build Debug APK
       run: ./gradlew :app:assembleDebug
 
-    - name: Prepare deploy directory
+    # Step 5: Prepare deploy folder and ZIP
+    - name: Prepare APK ZIP
       run: |
         mkdir -p deploy
         cp app/build/outputs/apk/debug/app-debug.apk deploy/MyApp.apk
@@ -33,7 +39,15 @@ jobs:
         zip -r MyApp.zip MyApp.apk
         cd ..
 
-    - name: Deploy to GitHub Pages
+    # Step 6: Upload ZIP as artifact (downloadable from Actions)
+    - name: Upload APK ZIP as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: MyApp
+        path: ./deploy/MyApp.zip
+
+    # Optional Step 7: Deploy to GitHub Pages (if you want)
+    - name: Deploy ZIP to gh-pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GH_PAT }}

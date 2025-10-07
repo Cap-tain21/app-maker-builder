@@ -1,23 +1,10 @@
-#!/bin/bash
-
-# 🚀 APK Builder for MyApp (WebView)
-
-# Go to template folder
-cd template || exit 1
-
-# Make sure root Gradle wrapper is executable
-chmod +x gradlew
-
-# Ensure app_content.zip exists
-if [ ! -f ../app_content.zip ]; then
-  echo "❌ No app_content.zip found! Please create it first."
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+# This script assumes gradle wrapper exists in repo root (./gradlew)
+if [ ! -f ./gradlew ]; then
+  echo "gradlew not found in template/ — you can run 'gradle wrapper --gradle-version 7.5' on host to generate it."
   exit 1
 fi
-
-# Unzip web content into app module
-mkdir -p app/src/main/assets/www/myapp
-unzip -o ../app_content.zip -d app/src/main/assets/www/myapp/
-
-# Run Gradle build
-echo "📦 Building: MyApp (com.example.myapp)"
-./gradlew assembleDebug
+chmod +x ./gradlew
+./gradlew :app:assembleDebug
